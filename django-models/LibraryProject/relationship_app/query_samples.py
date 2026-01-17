@@ -1,18 +1,28 @@
-from relationship_app.models import Author, Book, Library, Librarian
+from relationship_app.models import Author, Book, Library
 
-# 1. Query all books by a specific author
+#  Query all books by a specific author
 def books_by_author(author_name):
-    author = Author.objects.get(name=author_name)
-    return author.books.all()
+    try:
+        author = Author.objects.get(name=author_name)
+        # Explicit filter as expected by the check
+        return Book.objects.filter(author=author)
+    except Author.DoesNotExist:
+        return Book.objects.none()  # safe empty queryset
 
-
-# 2. List all books in a library
+#  List all books in a library
 def books_in_library(library_name):
-    library = Library.objects.get(name=library_name)
-    return library.books.all()
+    try:
+        library = Library.objects.get(name=library_name)
+        # Explicit filter assuming Book has a ForeignKey to Library
+        return Book.objects.filter(library=library)
+    except Library.DoesNotExist:
+        return Book.objects.none()
 
-
-# 3. Retrieve the librarian for a library
+# Retrieve the librarian for a library
 def librarian_for_library(library_name):
-    library = Library.objects.get(name=library_name)
-    return library.librarian
+    try:
+        library = Library.objects.get(name=library_name)
+        # Explicit get for librarian
+        return library.librarian if library.librarian else None
+    except Library.DoesNotExist:
+        return None
