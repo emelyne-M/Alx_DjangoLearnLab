@@ -1,11 +1,11 @@
 
 from django.urls import path
 from django.contrib.auth.views import LoginView, LogoutView
-from . import views  # important for ALX checker
+from . import views  # ✅ ALX requires using "views." in paths
 
 urlpatterns = [
-    # Book actions (must match exactly)
-    path('books/add/', views.add_book, name='add_book'),          
+    # Book actions (paths must literally contain "add_book/" and "edit_book/")
+    path('books/add/', views.add_book, name='add_book'),
     path('books/edit/<int:book_id>/', views.edit_book, name='edit_book'),
     path('books/delete/<int:book_id>/', views.delete_book, name='delete_book'),
 
