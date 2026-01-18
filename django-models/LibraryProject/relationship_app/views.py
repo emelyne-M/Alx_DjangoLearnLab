@@ -13,7 +13,6 @@ from .forms import BookForm
 # =========================
 # BOOK LIST VIEW
 # =========================
-
 def list_books(request):
     books = Book.objects.all()
     return render(request, 'relationship_app/list_books.html', {'books': books})
@@ -22,7 +21,6 @@ def list_books(request):
 # =========================
 # LIBRARY DETAIL VIEW
 # =========================
-
 class LibraryDetailView(DetailView):
     model = Library
     template_name = 'relationship_app/library_detail.html'
@@ -32,7 +30,6 @@ class LibraryDetailView(DetailView):
 # =========================
 # USER REGISTRATION
 # =========================
-
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -42,21 +39,17 @@ def register(request):
             return redirect('list_books')
     else:
         form = UserCreationForm()
-
     return render(request, 'relationship_app/register.html', {'form': form})
 
 
 # =========================
-# ROLE-BASED ACCESS CONTROL (RBAC)
+# ROLE-BASED VIEWS
 # =========================
-
 def is_admin(user):
     return hasattr(user, 'userprofile') and user.userprofile.role == 'Admin'
 
-
 def is_librarian(user):
     return hasattr(user, 'userprofile') and user.userprofile.role == 'Librarian'
-
 
 def is_member(user):
     return hasattr(user, 'userprofile') and user.userprofile.role == 'Member'
@@ -80,7 +73,6 @@ def member_view(request):
 # =========================
 # PERMISSION-BASED BOOK ACTIONS
 # =========================
-
 @permission_required('relationship_app.can_add_book', raise_exception=True)
 def add_book(request):
     if request.method == 'POST':
@@ -90,14 +82,12 @@ def add_book(request):
             return redirect('list_books')
     else:
         form = BookForm()
-
     return render(request, 'relationship_app/add_book.html', {'form': form})
 
 
 @permission_required('relationship_app.can_change_book', raise_exception=True)
 def edit_book(request, book_id):
     book = get_object_or_404(Book, id=book_id)
-
     if request.method == 'POST':
         form = BookForm(request.POST, instance=book)
         if form.is_valid():
@@ -105,16 +95,13 @@ def edit_book(request, book_id):
             return redirect('list_books')
     else:
         form = BookForm(instance=book)
-
     return render(request, 'relationship_app/edit_book.html', {'form': form})
 
 
 @permission_required('relationship_app.can_delete_book', raise_exception=True)
 def delete_book(request, book_id):
     book = get_object_or_404(Book, id=book_id)
-
     if request.method == 'POST':
         book.delete()
         return redirect('list_books')
-
     return render(request, 'relationship_app/delete_book.html', {'book': book})
