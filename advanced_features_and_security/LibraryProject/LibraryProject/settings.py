@@ -125,25 +125,34 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'bookshelf.CustomUser'
 
-# SECURITY SETTINGS
+# ---------------- SECURITY SETTINGS ----------------
 
-DEBUG = False  
+# Production mode
+DEBUG = False  # Already set
 
-# Browser protections
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking
+# ---------------- Browser Protections ----------------
+SECURE_BROWSER_XSS_FILTER = True          # Enable browser XSS filter
+SECURE_CONTENT_TYPE_NOSNIFF = True        # Prevent MIME type sniffing
+X_FRAME_OPTIONS = 'DENY'                  # Prevent clickjacking
 
-# Secure cookies (ensure HTTPS)
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+# ---------------- HTTPS Enforcement ----------------
+SECURE_SSL_REDIRECT = True                # Redirect all HTTP -> HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  
+# Required if behind a reverse proxy like Nginx
 
-# Optional: HSTS (enforces HTTPS)
-SECURE_HSTS_SECONDS = 3600
+# ---------------- HSTS (HTTP Strict Transport Security) ----------------
+SECURE_HSTS_SECONDS = 31536000            # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
+# ---------------- Secure Cookies ----------------
+SESSION_COOKIE_SECURE = True              # Only sent over HTTPS
+CSRF_COOKIE_SECURE = True                 # Only sent over HTTPS
 
+# ---------------- Content Security Policy (CSP) ----------------
+# Requires django-csp middleware installed and added to MIDDLEWARE
 CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'",)
-CSP_STYLE_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "https://ajax.googleapis.com")  # Add trusted script sources
+CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")  # Add trusted style sources
+CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")      # Trusted font sources
+CSP_IMG_SRC = ("'self'", "data:")                           # Allow inline images if needed
