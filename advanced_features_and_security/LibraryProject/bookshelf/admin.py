@@ -1,5 +1,8 @@
 from django.contrib import admin
 from .models import Book
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from .models import CustomUser
 
 
 @admin.register(Book)
@@ -8,9 +11,7 @@ class BookAdmin(admin.ModelAdmin):
     search_fields = ('title', 'author')                     # Enable search by title and author
     list_filter = ('publication_year',)                    # Add filter by publication year
 
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser
+
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
