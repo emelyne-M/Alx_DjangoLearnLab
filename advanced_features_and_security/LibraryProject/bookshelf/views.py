@@ -4,6 +4,10 @@ from django.views.decorators.csrf import csrf_protect
 from .models import Book
 from .forms import BookForm
 
+from django.shortcuts import render
+from .models import Book
+from .forms import ExampleForm
+
 # ==============================
 # List all books (view permission)
 # ==============================
@@ -68,3 +72,15 @@ def search_books(request):
     books = Book.objects.filter(title__icontains=query)  # Safe query
     return render(request, 'bookshelf/list_books.html', {'books': books})
 
+  # <-- updated
+
+def book_list(request):
+    books = Book.objects.all()
+    form = ExampleForm(request.GET or None)  # <-- updated
+
+    if form.is_valid():
+        query = form.cleaned_data.get('q')
+        if query:
+            books = books.filter(title__icontains=query)
+
+    return render(request, 'bookshelf/book_list.html', {'books': books, 'form': form})
