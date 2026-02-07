@@ -16,7 +16,6 @@ class BookSerializer(serializers.ModelSerializer):
             )
         return value
 
-
 class AuthorSerializer(serializers.ModelSerializer):
    
     books = BookSerializer(many=True, read_only=True)
