@@ -49,6 +49,10 @@ class BookUpdateView(generics.UpdateAPIView):
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_object(self):
+        # get book id from query parameter ?id=1
+        pk = self.request.query_params.get("id")
+        return generics.get_object_or_404(Book, pk=pk)
 
 class BookDeleteView(generics.DestroyAPIView):
     """
