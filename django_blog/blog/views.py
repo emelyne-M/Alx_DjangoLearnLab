@@ -3,12 +3,23 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm, UserChangeForm
-from .forms import RegistrationForm, PostForm
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import (
+    ListView,
+    DetailView,
+    CreateView,
+    UpdateView,
+    DeleteView
+)
+
+from .forms import RegistrationForm
 from .models import Post
 
-# ------------------------
+
+# ==========================================
 # Authentication Views
-# ------------------------
+# ==========================================
 
 def register_view(request):
     if request.method == 'POST':
@@ -23,6 +34,7 @@ def register_view(request):
     else:
         form = RegistrationForm()
     return render(request, 'blog/register.html', {'form': form})
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -40,14 +52,16 @@ def login_view(request):
         form = AuthenticationForm()
     return render(request, 'blog/login.html', {'form': form})
 
+
 def logout_view(request):
     logout(request)
     messages.success(request, "You have successfully logged out.")
     return redirect('home')
 
-# ------------------------
+
+# ==========================================
 # Profile View
-# ------------------------
+# ==========================================
 
 @login_required
 def profile_view(request):
@@ -61,57 +75,69 @@ def profile_view(request):
             messages.error(request, "Please correct the errors below.")
     else:
         form = UserChangeForm(instance=request.user)
+
     return render(request, 'blog/profile.html', {'form': form})
 
-# ------------------------
-# Blog Views
-# ------------------------
+
+# ==========================================
+# Home View (Latest 5 Posts)
+# ==========================================
 
 def home(request):
-    latest_posts = Post.objects.order_by('-published_date')[:5]  # latest 5 posts
+    latest_posts = Post.objects.order_by('-created_at')[:5]
     return render(request, 'blog/home.html', {'posts': latest_posts})
 
-def posts(request):
-    all_posts = Post.objects.order_by('-published_date')
-    return render(request, 'blog/posts.html', {'posts': all_posts})
 
-# ------------------------
-# Post Management
-# ------------------------
+# ==========================================
+# Blog Post CRUD (Class-Based Views)
+# ==========================================
 
-@login_required
-def create_post(request):
-    if request.method == 'POST':
-        form = PostForm(request.POST)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            messages.success(request, "Post created successfully!")
-            return redirect('posts')
-        else:
-            messages.error(request, "Please correct the errors below.")
-    else:
-        form = PostForm()
-    return render(request, 'blog/create_post.html', {'form': form})
+# LIST VIEW - accessible to everyone
+class PostListView(ListView):
+    model = Post
+    template_name = 'blog/post_list.html'
+    context_object_name = 'posts'
+    ordering = ['-created_at']
 
-@login_required
-def update_post(request, post_id):
-    try:
-        post = Post.objects.get(id=post_id, author=request.user)  # only author can edit
-    except Post.DoesNotExist:
-        messages.error(request, "Post not found or you are not allowed to edit it.")
-        return redirect('posts')
 
-    if request.method == 'POST':
-        form = PostForm(request.POST, instance=post)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Post updated successfully!")
-            return redirect('posts')
-        else:
-            messages.error(request, "Please correct the errors below.")
-    else:
-        form = PostForm(instance=post)
+# DETAIL VIEW - accessible to everyone
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'blog/post_detail.html'
 
-    return render(request, 'blog/update_post.html', {'form': form})
+
+# CREATE VIEW - only logged-in users
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
+    fields = ['title', 'content']
+    template_name = 'blog/post_form.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
+# UPDATE VIEW - only post author
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    fields = ['title', 'content']
+    template_name = 'blog/post_form.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def test_func(self):
+        post = self.get_object()
+        return self.request.user == post.author
+
+
+# DELETE VIEW - only post author
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Post
+    template_name = 'blog/post_confirm_delete.html'
+    success_url = reverse_lazy('post-list')
+
+    def test_func(self):
+        post = self.get_object()
+        return self.request.user == post.author
