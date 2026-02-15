@@ -4,6 +4,15 @@
 <h2>{{ object.title }}</h2>
 <p>{{ object.content }}</p>
 
+<!-- Tags -->
+{% if object.tags.all %}
+<p>Tags: 
+    {% for tag in object.tags.all %}
+        <a href="{% url 'post-list' %}?tag={{ tag }}">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+</p>
+{% endif %}
+
 <hr>
 <h3>Comments ({{ object.comments.count }})</h3>
 
@@ -35,8 +44,9 @@
 
 {% if user == object.author %}
     <br><br>
-    <a href="{% url 'post-update' object.pk %}">Edit</a>
+    <a href="{% url 'post-update' object.pk %}">Edit</a> |
     <a href="{% url 'post-delete' object.pk %}">Delete</a>
 {% endif %}
 
 {% endblock %}
+``

@@ -19,7 +19,10 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404
 from .models import Post, Comment
-
+from .forms import CommentForm
+from django.db.models import Q
+from .models import Post
+from taggit.models import Tag
 # ==========================================
 # Authentication Views
 # ==========================================
@@ -177,3 +180,16 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         comment = self.get_object()
         return self.request.user == comment.author
+
+
+
+
+# SEARCH
+def search_posts(request):
+    query = request.GET.get('q')
+    results = Post.objects.filter(
+        Q(title__icontains=query) | 
+        Q(content__icontains=query) | 
+        Q(tags__name__icontains=query)
+    ).distinct() if query else Post.objects.none()
+    return render(request, 'blog/search_results.html', {'posts': results, 'query': query})
