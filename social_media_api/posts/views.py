@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions,generics,APIView
+from rest_framework import viewsets, permissions, generics
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.pagination import PageNumberPagination
