@@ -3,14 +3,13 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
 
-
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
-        user = self.serializer_class.Meta.model.objects.get(id=response.data['id'])
+        user = self.get_serializer().Meta.model.objects.get(id=response.data['id'])
         token = Token.objects.get(user=user)
         response.data['token'] = token.key
         return response
