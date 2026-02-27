@@ -1,39 +1,36 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth import authenticate
-from rest_framework import serializers
+from rest_framework import generics, permissions
+from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-
-User = get_user_model()
-
-
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField()
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'password', 'bio', 'profile_picture']
-
-    def create(self, validated_data):
-        user = get_user_model().objects.create_user(
-            username=validated_data['username'],
-            email=validated_data.get('email'),
-            password=validated_data['password'],
-            bio=validated_data.get('bio', '')
-        )
-        Token.objects.create(user=user)
-        return user
+from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
 
 
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
 
-    def validate(self, data):
-        user = authenticate(
-            username=data['username'],
-            password=data['password']
-        )
-        if not user:
-            raise serializers.ValidationError("Invalid credentials")
-        data['user'] = user
-        return data
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        user = self.serializer_class.Meta.model.objects.get(id=response.data['id'])
+        token = Token.objects.get(user=user)
+        response.data['token'] = token.key
+        return response
+
+
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key})
+
+
+class ProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
