@@ -3,6 +3,8 @@ from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.pagination import PageNumberPagination
 from .models import Post
+from rest_framework.pagination import PageNumberPagination
+
 
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
@@ -35,6 +37,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
         
    
+
+
 
 class FeedView(generics.ListAPIView):
     serializer_class = PostSerializer
